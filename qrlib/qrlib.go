@@ -9,6 +9,7 @@ import "C"
 import (
 	"fmt"
 	"strconv"
+	"unsafe"
 )
 /*
 Error Codes:
@@ -58,26 +59,15 @@ bool qrcodegen_encodeText(const char *text, uint8_t tempBuffer[], uint8_t qrcode
 // Generate the QR Code
 func Generate(l string, ec int) error {
 	clink := C.CString(l)
-	defer C.free(clink)
-	b := make([]uint, C.qrcodegen_BUFFER_LEN_MAX)
-	defer C.free(b)
-	qr := make([]uint, C.qrcodegen_BUFFER_LEN_MAX)
-	defer C.free(qr)
-	ecl := C.enum_qrcodegen_Ecc{qrcodegen_Ecc_MEDIUM}
-	defer C.free(ecl)
-	mask := C.enum_qrcodegen_Mask{qrcodegen_Mask_AUTO}
-	defer C.free(mask)
-	ok := C.qrcodegen_encodeText(clink, &b[0], &qr[0], ecl, C.int(1), C.int(40), mask, boost)
+	defer C.free(unsafe.Pointer(&clink))
+	b := make([]C.uchar, C.qrcodegen_BUFFER_LEN_MAX)
+	defer C.free(unsafe.Pointer(&b))
+	qr := make([]C.uchar, C.qrcodegen_BUFFER_LEN_MAX)
+	defer C.free(unsafe.Pointer(&qr))
+	ok := C.qrcodegen_encodeText(clink, &b[0], &qr[0], C.enum_qrcodegen_Ecc(1), C.int(1), C.int(40), C.enum_qrcodegen_Mask(-1), false)
 	if !ok {
 		return fmt.Errorf("Unable to encodeText")
 	}
+	fmt.Printf("%v", qr)
 	return nil
 }
-
-
-
-/*
-uint8_t C.uint(x)
-size_t C.sizeof_x || uint16_t
-enum qrcodegen_Ecc  -> enum_qrcodegen_Ecc
-*/
