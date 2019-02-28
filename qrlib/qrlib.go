@@ -20,10 +20,13 @@ static void printQr(const uint8_t qrcode[]) {
 import "C"
 
 import (
+	"image/color"
+	"os"
 	"image"
+	"image/png"
 	"fmt"
 	"strconv"
-	"unsafe"
+//	"unsafe"
 )
 /*
 Error Codes:
@@ -85,11 +88,11 @@ bool qrcodegen_encodeText(const char *text, uint8_t tempBuffer[], uint8_t qrcode
 // Generate the QR Code
 func Generate(l string, ec int) (i *image.Image, err error) {
 	clink := C.CString(l)
-	defer C.free(unsafe.Pointer(&clink))
+	//defer C.free(unsafe.Pointer(&clink))
 	b := make([]C.uchar, C.qrcodegen_BUFFER_LEN_MAX)
-	defer C.free(unsafe.Pointer(&b))
+	//defer C.free(unsafe.Pointer(&b))
 	qr := make([]C.uchar, C.qrcodegen_BUFFER_LEN_MAX)
-	defer C.free(unsafe.Pointer(&qr))
+	//defer C.free(unsafe.Pointer(&qr))
 	ok := C.qrcodegen_encodeText(clink, &b[0], &qr[0], C.enum_qrcodegen_Ecc(1), C.int(1), C.int(40), C.enum_qrcodegen_Mask(-1), true)
 	if !ok {
 		return nil, fmt.Errorf("Unable to encodeText")
@@ -107,6 +110,21 @@ func Generate(l string, ec int) (i *image.Image, err error) {
 
 func buildImage(qr []C.uchar) (i *image.Image, err error) {
 	C.printQr(&qr[0])
+	size := int(C.qrcodegen_getSize(&qr[0]))
+	g := image.NewGray(image.Rect(0, 0, size, size))
+	for y := 0 ;y < size; y++ {
+		for x := 0; x < size; x++ {
+			mod := C.qrcodegen_getModule(&qr[0], C.int(x), C.int(y))
+			if mod { 
+				g.Set(x, y, color.Black)
+			} else {
+				g.Set(x, x, color.White)
+			}
+		}
+	}
+	f, _ := os.Create("out.png")
+	defer f.Close()
+	png.Encode(f, g)
 	return nil, nil
 }
 
