@@ -109,16 +109,18 @@ func Generate(l string, ec int) (i *image.Image, err error) {
 }
 
 func buildImage(qr []C.uchar) (i *image.Image, err error) {
+	border := 2
 	C.printQr(&qr[0])
-	size := int(C.qrcodegen_getSize(&qr[0]))
+	size := int(C.qrcodegen_getSize(&qr[0])) + 2 * border
 	g := image.NewGray(image.Rect(0, 0, size, size))
-	for y := 0 ;y < size; y++ {
+	for y := 0; y < size; y++ {
 		for x := 0; x < size; x++ {
-			mod := C.qrcodegen_getModule(&qr[0], C.int(x), C.int(y))
+			mod := C.qrcodegen_getModule(&qr[0], C.int(x - border), C.int(y - border))
+			fmt.Printf("x, y: %d, %d --> %v\n", x, y, mod)
 			if mod { 
 				g.Set(x, y, color.Black)
 			} else {
-				g.Set(x, x, color.White)
+				g.Set(x, y, color.White)
 			}
 		}
 	}
