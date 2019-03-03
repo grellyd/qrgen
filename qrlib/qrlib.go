@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"strconv"
 	"regexp"
-//	"unsafe"
+	"unsafe"
 )
 
 /*
@@ -114,11 +114,10 @@ func write(i *image.Gray, o string) error {
 // Generate the QR Code
 func Generate(l string, ec ErrorCorrectionLevel) (i *image.Gray, err error) {
 	clink := C.CString(l)
-	//defer C.free(unsafe.Pointer(&clink))
-	b := make([]C.uchar, C.qrcodegen_BUFFER_LEN_MAX)
-	//defer C.free(unsafe.Pointer(&b))
+	defer C.free(unsafe.Pointer(clink))
+	// b and qr do not need to be C.freed as they use make, an allocation function the go garbage collector is aware of, rather than a C.malloc based function.
+	b := make([]C.uchar, C.int(40))
 	qr := make([]C.uchar, C.qrcodegen_BUFFER_LEN_MAX)
-	//defer C.free(unsafe.Pointer(&qr))
 	/*
 	From qrcodegen.h
 	bool qrcodegen_encodeText(const char *text, uint8_t tempBuffer[], uint8_t qrcode[], enum qrcodegen_Ecc ecl, int minVersion, int maxVersion, enum qrcodegen_Mask mask, bool boostEcl);
