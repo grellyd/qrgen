@@ -7,7 +7,7 @@ const (
 	programName        = "qrgen"
 	usageCommand       = "go run main.go [ options ]"
 	exampleCommand     = "go run main.go -i 'https://grellyd.com'"
-	programDescription = "Generate QR codes contianing a string (aka a link) with a given level of error correction."
+	programDescription = "Generate a QR code contianing a link."
 )
 
 // A Command is an application instruction.
@@ -28,18 +28,7 @@ func (c *Command) Present() bool {
 
 // ValidCommands to this program
 func ValidCommands() (commands []*Command) {
-	return []*Command{input(), ecLevel(), debug(), help()}
-}
-
-func ecLevel() *Command {
-	return &Command{
-		order:       1,
-		long:        "--error-correction",
-		short:       "-e",
-		description: "The level of error correction to apply",
-		regex:       *regexp.MustCompile("-e|--error-correction"),
-		length:      2,
-	}
+	return []*Command{input(), ecLevel(), output(), debug(), help()}
 }
 
 func input() *Command {
@@ -53,9 +42,31 @@ func input() *Command {
 	}
 }
 
-func debug() *Command {
+func ecLevel() *Command {
+	return &Command{
+		order:       1,
+		long:        "--error-correction",
+		short:       "-e",
+		description: "The level of error correction to apply",
+		regex:       *regexp.MustCompile("-e|--error-correction"),
+		length:      2,
+	}
+}
+
+func output() *Command {
 	return &Command{
 		order:       2,
+		long:        "--output",
+		short:       "-o",
+		description: "The output image as a png",
+		regex:       *regexp.MustCompile("-o|--output"),
+		length:      2,
+	}
+}
+
+func debug() *Command {
+	return &Command{
+		order:       3,
 		long:        "--debug",
 		short:       "-d",
 		description: "Run the program in debug mode, with extra logging",

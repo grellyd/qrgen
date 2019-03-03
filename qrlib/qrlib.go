@@ -26,6 +26,7 @@ import (
 	"image/png"
 	"fmt"
 	"strconv"
+	"regexp"
 //	"unsafe"
 )
 
@@ -58,7 +59,7 @@ const (
 func GenerateCli(args []string) error {
 	l := ""
 	ec := ECLL
-	f := ""
+	o := "out.png"
 
 	for _, s := range args {
 		fmt.Println(s)
@@ -78,6 +79,16 @@ func GenerateCli(args []string) error {
 				return fmt.Errorf("incorrect error level")
 			}
 		}
+		if args[2] != "" {
+			o = args[2]
+			ending, err :=  regexp.MatchString("\\.png$", o) 
+			if err != nil {
+				return fmt.Errorf("unable to match for ending: %s", err.Error())
+			}
+			if !ending {
+				return fmt.Errorf("output must end in '.png'")
+			}
+		} 
 	} else {
 		return fmt.Errorf("argument error")
 	}
@@ -85,7 +96,7 @@ func GenerateCli(args []string) error {
 	if err!= nil {
 		return fmt.Errorf("unable to generate error: %s", err.Error())
 	}
-	err = write(i)
+	err = write(i, o)
 	if err != nil {
 		return fmt.Errorf("unable to write image: %s", err.Error())
 	}
@@ -93,8 +104,8 @@ func GenerateCli(args []string) error {
 }
 
 // write the resulting image to disk
-func write(i *image.Gray) error {
-	f, _ := os.Create("out.png")
+func write(i *image.Gray, o string) error {
+	f, _ := os.Create(o)
 	defer f.Close()
 	png.Encode(f, i)
 	return nil
@@ -116,10 +127,6 @@ func Generate(l string, ec ErrorCorrectionLevel) (i *image.Gray, err error) {
 	if !ok {
 		return nil, fmt.Errorf("Unable to encodeText")
 	}
-	size := C.qrcodegen_getSize(&qr[0])
-	fmt.Printf("%v\n", size)
-	fmt.Printf("%v\n", qr[:size*4])
-	fmt.Printf("%v", qr)
 	i, err = buildImage(qr)
 	if err != nil {
 		return nil, fmt.Errorf("unable to build an output image: %s", err.Error())
