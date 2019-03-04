@@ -5,8 +5,8 @@ import "regexp"
 const (
 	breakLine          = "===================="
 	programName        = "qrgen"
-	usageCommand       = "go run main.go [ options ]"
-	exampleCommand     = "go run main.go -i 'https://grellyd.com'"
+	usageCommand       = "qrgen [ options ]"
+	exampleCommand     = "qrgen -l 'https://grellyd.com'"
 	programDescription = "Generate a QR code contianing a link."
 )
 

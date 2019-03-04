@@ -61,9 +61,6 @@ func GenerateCli(args []string) error {
 	ec := ECLL
 	o := "out.png"
 
-	for _, s := range args {
-		fmt.Println(s)
-	}
 	if len(args) > 0 {
 		if args[0] != "" {
 			l = args[0]
@@ -108,6 +105,7 @@ func write(i *image.Gray, o string) error {
 	f, _ := os.Create(o)
 	defer f.Close()
 	png.Encode(f, i)
+	fmt.Printf("Written to %s\n", o)
 	return nil
 }
 
@@ -116,7 +114,7 @@ func Generate(l string, ec ErrorCorrectionLevel) (i *image.Gray, err error) {
 	clink := C.CString(l)
 	defer C.free(unsafe.Pointer(clink))
 	// b and qr do not need to be C.freed as they use make, an allocation function the go garbage collector is aware of, rather than a C.malloc based function.
-	b := make([]C.uchar, C.int(40))
+	b := make([]C.uchar, C.qrcodegen_BUFFER_LEN_MAX)
 	qr := make([]C.uchar, C.qrcodegen_BUFFER_LEN_MAX)
 	/*
 	From qrcodegen.h
