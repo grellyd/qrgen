@@ -25,8 +25,6 @@ import (
 	"image/color"
 	"image/png"
 	"os"
-	"regexp"
-	"strconv"
 	"unsafe"
 )
 
@@ -55,73 +53,8 @@ const (
 	BORDER = 2
 )
 
-// GenerateCli is a CLI wrapper for Generate
-func GenerateCli(args []string) error {
-	var err error
-	l := ""
-	ec := ECLL
-	o := "out.png"
-	s := 1
-
-	if len(args) > 0 {
-		if args[0] != "" {
-			l = args[0]
-		} else {
-			return fmt.Errorf("no link given")
-		}
-		if args[1] != "" {
-			i, err := strconv.Atoi(args[1])
-			if err != nil {
-				return fmt.Errorf("error parsing error level: %s", err.Error())
-			}
-
-			ec = ErrorCorrectionLevel(i)
-			if ec < 0 || ec > 3 {
-				return fmt.Errorf("incorrect error level")
-			}
-		}
-		if args[2] != "" {
-			o = args[2]
-			ending, err := regexp.MatchString("\\.png$", o)
-			if err != nil {
-				return fmt.Errorf("unable to match for ending: %s", err.Error())
-			}
-			if !ending {
-				return fmt.Errorf("output must end in '.png'")
-			}
-		}
-
-		if args[4] != "" {
-			s, err = strconv.Atoi(args[4])
-			if err != nil {
-				return fmt.Errorf("error parsing scaling factor:", err.Error())
-			}
-		}
-
-	} else {
-		return fmt.Errorf("argument error")
-	}
-
-	qr, err := Generate(l, ec)
-	if err != nil {
-		return fmt.Errorf("unable to generate: %s", err.Error())
-	}
-
-	i, err := buildImage(qr, s)
-	if err != nil {
-		return fmt.Errorf("unable to build an output image: %s", err.Error())
-	}
-
-	err = write(i, o)
-	if err != nil {
-		return fmt.Errorf("unable to write image: %s", err.Error())
-	}
-
-	return nil
-}
-
 // write the resulting image to disk
-func write(i image.Image, o string) error {
+func Write(i image.Image, o string) error {
 	f, _ := os.Create(o)
 	defer f.Close()
 	png.Encode(f, i)
@@ -147,7 +80,7 @@ func Generate(l string, ec ErrorCorrectionLevel) ([]C.uchar, error) {
 	return qr, nil
 }
 
-func buildImage(qr []C.uchar, factor int) (i *image.Gray, err error) {
+func BuildImage(qr []C.uchar, factor int) (i *image.Gray, err error) {
 	C.printQr(&qr[0])
 	size := int(C.qrcodegen_getSize(&qr[0]))*factor + 2*BORDER*factor
 	g := image.NewGray(image.Rect(0, 0, size, size))

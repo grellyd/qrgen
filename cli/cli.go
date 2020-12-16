@@ -3,6 +3,8 @@ package cli
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/grellyd/qrgen/qrlib"
@@ -26,12 +28,77 @@ func Run() (code int) {
 	}
 	runArgs := convertCommands(commands)
 	// Run the core program
-	err := qrlib.GenerateCli(runArgs)
+	err := generateCli(runArgs)
 	if err != nil {
 		fmt.Println(err.Error())
 		code = 1
 	}
 	return code
+}
+
+// GenerateCli is a CLI wrapper for Generate
+func generateCli(args []string) error {
+	var err error
+	l := ""
+	ec := qrlib.ECLL
+	o := "out.png"
+	s := 1
+
+	if len(args) > 0 {
+		if args[0] != "" {
+			l = args[0]
+		} else {
+			return fmt.Errorf("no link given")
+		}
+		if args[1] != "" {
+			i, err := strconv.Atoi(args[1])
+			if err != nil {
+				return fmt.Errorf("error parsing error level: %s", err.Error())
+			}
+
+			ec = qrlib.ErrorCorrectionLevel(i)
+			if ec < 0 || ec > 3 {
+				return fmt.Errorf("incorrect error level")
+			}
+		}
+		if args[2] != "" {
+			o = args[2]
+			ending, err := regexp.MatchString("\\.png$", o)
+			if err != nil {
+				return fmt.Errorf("unable to match for ending: %s", err.Error())
+			}
+			if !ending {
+				return fmt.Errorf("output must end in '.png'")
+			}
+		}
+
+		if args[4] != "" {
+			s, err = strconv.Atoi(args[4])
+			if err != nil {
+				return fmt.Errorf("error parsing scaling factor:", err.Error())
+			}
+		}
+
+	} else {
+		return fmt.Errorf("argument error")
+	}
+
+	qr, err := qrlib.Generate(l, ec)
+	if err != nil {
+		return fmt.Errorf("unable to generate: %s", err.Error())
+	}
+
+	i, err := qrlib.BuildImage(qr, s)
+	if err != nil {
+		return fmt.Errorf("unable to build an output image: %s", err.Error())
+	}
+
+	err = qrlib.Write(i, o)
+	if err != nil {
+		return fmt.Errorf("unable to write image: %s", err.Error())
+	}
+
+	return nil
 }
 
 func getFullArg(args []string, start int, length int) (string, string) {
