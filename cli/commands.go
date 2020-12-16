@@ -28,7 +28,7 @@ func (c *Command) Present() bool {
 
 // ValidCommands to this program
 func ValidCommands() (commands []*Command) {
-	return []*Command{input(), ecLevel(), output(), debug(), help()}
+	return []*Command{input(), ecLevel(), output(), debug(), scaleFactor(), help()}
 }
 
 func input() *Command {
@@ -72,6 +72,17 @@ func debug() *Command {
 		description: "Run the program in debug mode, with extra logging",
 		regex:       *regexp.MustCompile("-d|--debug"),
 		length:      1,
+	}
+}
+
+func scaleFactor() *Command {
+	return &Command{
+		order:       4,
+		long:        "--scaling-factor",
+		short:       "-s",
+		description: "The scaling factor to increase the size of the output image",
+		regex:       *regexp.MustCompile("-s|--scaling-factor"),
+		length:      2,
 	}
 }
 
